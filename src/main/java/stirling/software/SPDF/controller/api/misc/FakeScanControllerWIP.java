@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import io.github.pixee.security.Filenames;
 import java.awt.Color;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
@@ -29,7 +30,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -50,7 +50,7 @@ public class FakeScanControllerWIP {
 
     // TODO
     @Hidden
-    @PostMapping(consumes = "multipart/form-data", value = "/fakeScan")
+    // @PostMapping(consumes = "multipart/form-data", value = "/fakeScan")
     @Operation(
             summary = "Repair a PDF file",
             description =
@@ -142,7 +142,7 @@ public class FakeScanControllerWIP {
 
         // Return the optimized PDF as a response
         String outputFilename =
-                inputFile.getOriginalFilename().replaceFirst("[.][^.]+$", "") + "_scanned.pdf";
+                Filenames.toSimpleFileName(inputFile.getOriginalFilename()).replaceFirst("[.][^.]+$", "") + "_scanned.pdf";
         return WebResponseUtils.boasToWebResponse(baos, outputFilename);
     }
 }

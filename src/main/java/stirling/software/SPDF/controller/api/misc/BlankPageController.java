@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.misc;
 
+import io.github.pixee.security.Filenames;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -33,7 +34,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import stirling.software.SPDF.model.api.misc.RemoveBlankPagesRequest;
 import stirling.software.SPDF.utils.PdfUtils;
 import stirling.software.SPDF.utils.ProcessExecutor;
-import stirling.software.SPDF.utils.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.SPDF.utils.WebResponseUtils;
 
 @RestController
@@ -85,7 +85,7 @@ public class BlankPageController {
                         List<String> command =
                                 new ArrayList<>(
                                         Arrays.asList(
-                                                "python3",
+                                                "python",
                                                 System.getProperty("user.dir")
                                                         + "/scripts/detect-blank-pages.py",
                                                 tempFile.toString(),
@@ -94,18 +94,25 @@ public class BlankPageController {
                                                 "--white_percent",
                                                 String.valueOf(whitePercent)));
 
+                        Boolean blank = false;
                         // Run CLI command
-                        ProcessExecutorResult returnCode =
-                                ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV)
-                                        .runCommandWithOutputHandling(command);
+                        try {
+                            ProcessExecutor.getInstance(ProcessExecutor.Processes.PYTHON_OPENCV)
+                                    .runCommandWithOutputHandling(command);
+                        } catch (IOException e) {
+                            // From detect-blank-pages.py
+                            // Return code 1: The image is considered blank.
+                            // Return code 0: The image is not considered blank.
+                            // Since the process returned with a failure code, it should be blank.
+                            blank = true;
+                        }
 
-                        // does contain data
-                        if (returnCode.getRc() == 0) {
+                        if (blank) {
+                            System.out.println("Skipping, Image was blank for page #" + pageIndex);
+                        } else {
                             System.out.println(
                                     "page " + pageIndex + " has image which is not blank");
                             pagesToKeepIndex.add(pageIndex);
-                        } else {
-                            System.out.println("Skipping, Image was blank for page #" + pageIndex);
                         }
                     }
                 }
@@ -125,7 +132,7 @@ public class BlankPageController {
 
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                    inputFile.getOriginalFilename().replaceFirst("[.][^.]+$", "")
+                    Filenames.toSimpleFileName(inputFile.getOriginalFilename()).replaceFirst("[.][^.]+$", "")
                             + "_blanksRemoved.pdf");
         } catch (IOException e) {
             e.printStackTrace();
