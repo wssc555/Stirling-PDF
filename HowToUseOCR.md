@@ -2,12 +2,12 @@
 
 This document provides instructions on how to add additional language packs for the OCR tab in Stirling-PDF, both inside and outside of Docker.
 
-## My OCR used to work and now doesnt!
-Please update your tesseract docker volume path version from 4.00 to 5
+## My OCR used to work and now doesn't!
+The paths have changed for the tessadata locations on new docker images, please use ``/usr/share/tessdata`` (Others should still work for backwards compatibility but might not)
 
 ## How does the OCR Work
 Stirling-PDF uses [OCRmyPDF](https://github.com/ocrmypdf/OCRmyPDF) which in turn uses tesseract for its text recognition.
-All credit goes to them for this awesome work! 
+All credit goes to them for this awesome work!
 
 ## Language Packs
 
@@ -27,7 +27,7 @@ Depending on your requirements, you can choose the appropriate language pack for
 
 #### Docker
 
-If you are using Docker, you need to expose the Tesseract tessdata directory as a volume in order to use the additional language packs. 
+If you are using Docker, you need to expose the Tesseract tessdata directory as a volume in order to use the additional language packs.
 #### Docker Compose
 Modify your `docker-compose.yml` file to include the following volume configuration:
 
