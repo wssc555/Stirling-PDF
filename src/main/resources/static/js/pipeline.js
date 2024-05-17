@@ -248,20 +248,20 @@ document.getElementById("addOperationBtn").addEventListener("click", function ()
   }
 
   listItem.innerHTML = `
-	    <div class="d-flex justify-content-between align-items-center w-100">
-	        <div class="operationName">${selectedOperation}</div>
-	        <div class="arrows d-flex">
-	            <button class="btn btn-secondary move-up ms-1"><span>&uarr;</span></button>
-	            <button class="btn btn-secondary move-down ms-1"><span>&darr;</span></button>
-	            <button class="btn ${hasSettings ? "btn-warning" : "btn-secondary"} pipelineSettings ms-1" ${
+      <div class="d-flex justify-content-between align-items-center w-100">
+          <div class="operationName">${selectedOperation}</div>
+          <div class="arrows d-flex">
+              <button class="btn btn-secondary move-up ms-1"><span>&uarr;</span></button>
+              <button class="btn btn-secondary move-down ms-1"><span>&darr;</span></button>
+              <button class="btn ${hasSettings ? "btn-warning" : "btn-secondary"} pipelineSettings ms-1" ${
                 hasSettings ? "" : "disabled"
               }>
-			        <span style="color: ${hasSettings ? "white" : "grey"};">⚙️</span>
-			    </button>
-	            <button class="btn btn-danger remove ms-1"><span>X</span></button>
-	        </div>
-	    </div>
-	`;
+              <span style="color: ${hasSettings ? "white" : "grey"};">⚙️</span>
+          </button>
+              <button class="btn btn-danger remove ms-1"><span>X</span></button>
+          </div>
+      </div>
+  `;
 
   pipelineList.appendChild(listItem);
 
@@ -465,19 +465,44 @@ document.getElementById("addOperationBtn").addEventListener("click", function ()
     //pipelineSettingsModal.style.display = "block";
 
     //pipelineSettingsModal.getElementsByClassName("close")[0].onclick = function() {
-    //	pipelineSettingsModal.style.display = "none";
+    //  pipelineSettingsModal.style.display = "none";
     //}
 
     //window.onclick = function(event) {
-    //	if (event.target == pipelineSettingsModal) {
-    //		pipelineSettingsModal.style.display = "none";
-    //	}
+    //  if (event.target == pipelineSettingsModal) {
+    //    pipelineSettingsModal.style.display = "none";
+    //  }
     //}
   }
   showpipelineSettingsModal(selectedOperation);
   updateConfigInDropdown();
   hideOrShowPipelineHeader();
 });
+
+function loadBrowserPipelinesIntoDropdown() {
+  let pipelineSelect = document.getElementById("pipelineSelect");
+
+  // Retrieve the current set of option values for comparison
+  let existingOptions = new Set();
+  for (let option of pipelineSelect.options) {
+    existingOptions.add(option.value);
+  }
+
+   // Iterate over all items in localStorage
+  for (let i = 0; i < localStorage.length; i++) {
+    let key = localStorage.key(i);
+    if (key.startsWith("#Pipeline-")) {
+      let pipelineData = localStorage.getItem(key);
+      // Check if the data is already in the dropdown
+      if (!existingOptions.has(pipelineData)) {
+        let pipelineName = key.replace("#Pipeline-", ""); // Extract pipeline name from the key
+        let option = new Option(pipelineName, pipelineData); // Use pipeline data as the option value
+        pipelineSelect.appendChild(option);
+      }
+    }
+  }
+}
+loadBrowserPipelinesIntoDropdown();
 
 function updateConfigInDropdown() {
   let pipelineSelect = document.getElementById("pipelineSelect");
@@ -496,13 +521,13 @@ function updateConfigInDropdown() {
 }
 
 var saveBtn = document.getElementById("savePipelineBtn");
-
+var saveBrowserBtn = document.getElementById("saveBrowserPipelineBtn");
 // Remove any existing event listeners
 saveBtn.removeEventListener("click", savePipeline);
-
+saveBrowserBtn.removeEventListener("click", savePipelineToBrowser);
 // Add the event listener
 saveBtn.addEventListener("click", savePipeline);
-console.log("saveBtn", saveBtn);
+saveBrowserBtn.addEventListener("click", savePipelineToBrowser);
 
 function configToJson() {
   if (!validatePipeline()) {
@@ -537,6 +562,21 @@ function configToJson() {
   return JSON.stringify(pipelineConfig, null, 2);
 }
 
+function savePipelineToBrowser() {
+  let pipelineConfigJson = configToJson();
+  if (!pipelineConfigJson) {
+    console.error("Failed to save pipeline: Invalid configuration");
+    return;
+  }
+
+  let pipelineName = document.getElementById("pipelineName").value;
+  if (!pipelineName) {
+    console.error("Failed to save pipeline: Pipeline name is required");
+    return;
+  }
+  localStorage.setItem("#Pipeline-" +pipelineName, pipelineConfigJson);
+  console.log("Pipeline configuration saved to localStorage");
+}
 function savePipeline() {
   let pipelineConfigJson = configToJson();
   if (!pipelineConfigJson) {
